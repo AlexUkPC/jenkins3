@@ -1,0 +1,124 @@
+Replace all jenkins3 in all files with the actual name of the project and also in this file
+cp -r env_example/ .env
+change the passwords in .env/development/database and .env/production/database
+
+mv .env/development/web .env/development/web_jenkins3
+mv .env/development/database .env/development/database_jenkins3
+mv .env/production/web .env/production/web_jenkins3
+mv .env/production/database .env/production/database_jenkins3
+mv env_example/development/web env_example/development/web_jenkins3
+mv env_example/development/database env_example/development/database_jenkins3
+mv env_example/production/web env_example/production/web_jenkins3
+mv env_example/production/database env_example/production/database_jenkins3
+mv docker-compose-project_name.yml docker-compose-jenkins3.yml
+
+?Create a new project
+    docker build -t rails-toolbox-jenkins3 --build-arg USER_ID=$(id -u) --build-arg GROUP_ID=$(id -g) -f Dockerfile.rails .
+    docker run -it --rm -v $PWD:/opt/app rails-toolbox-jenkins3 rails new -d postgresql --skip-bundle jenkins3
+
+?Create the development environment
+    Move docker-entrypoint.sh and wait-for inside the jenkins3 folder
+        chmod +x jenkins3/docker-entrypoint.sh #make it executable
+    *Postgresql
+        in database.yml modificari:
+            in default:
+                ...
+                pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
+                host: <%= ENV.fetch("DATABASE_HOST"){ 'none'}  %>
+                username: <%= ENV.fetch("POSTGRES_USER"){ 'none'}  %>
+                password: <%= ENV.fetch("POSTGRES_PASSWORD"){ 'none'}  %>
+                database: <%= ENV.fetch("POSTGRES_DB"){ 'none'}  %>
+                timeout: 5000
+            in development sa ramana doar <<: *default
+            in production sa ramana doar <<: *default
+    cd ..
+    cd jenkins3
+    docker-compose run --rm --user "$(id -u):$(id -g)" web_jenkins3 bin/rails webpacker:install
+    in config/webpacker.yml
+        development:
+            ...
+            dev_server:
+                ...
+                port: 3036 #change this
+                public: localhost:3036 #change this
+                ...
+                watch_options:
+                    ...
+                    poll: true
+    in config/environments/development
+	    comment config.action_view.annotate_rendered_view_with_filenames = true
+    cd ..
+    cd jenkins3
+    change in docker-compose.yml 
+        services:
+            web_aplicatie2:
+                ports:
+                - "3001:3000" #change only external port
+            webpack_dev_server_aplicatie2:
+                ports: 
+                - "3036:3036" #change this
+    in config/environments/development add
+	config.hosts << "jenkins3.local"
+    in Windows/system32/drivers/etc/hosts
+	add 127.65.43.next jenkins3.local
+    in admin elevated cmd 
+	netsh interface portproxy add v4tov4 listenport=80 listenaddress=127.65.43.next connectport=300next connectaddress=127.0.0.1
+    docker-compose up -d
+
+?Use it in development
+    Generate a scaffold
+        docker-compose exec --user "$(id -u):$(id -g)" web_jenkins3 bin/rails g scaffold User first_name last_name
+        docker-compose exec --user "$(id -u):$(id -g)" web_jenkins3 bin/rails db:migrate
+    Adding a gem
+        docker-compose exec web_jenkins3 bundle install
+?Move to another development machine
+    git clone https://github.com/... --config core.autocrlf=input
+    change env_example to .env
+    docker-compose run --rm jenkins3 bin/rails webpacker:install (when ask to override webpacker.yml answer n)
+    docker-compose up
+    migrate db
+
+?Configuring the production environment
+    change the SECRET_KEY_BASE .env/production/web
+    docker build -f Dockerfile.prod -t alexrogna/jenkins3_web:prod --build-arg USER_ID=$(id -u) --build-arg GROUP_ID=$(id -g) .
+    docker push alexrogna/jenkins3_web:prod
+
+?Create online deployment
+    creeaza subdomeniu pe linode
+    ssh login
+        nano docker-compose-jenkins3.yml
+            copiaza din docker-compose-jenkins3.yml 
+        nano .env/production/database_jenkins3
+            copiaza din .env/production/database_jenkins3
+        nano .env/production/web_jenkins3
+            copiaza din .env/production/web_jenkins3
+        docker-compose -f docker-compose-jenkins3.yml up
+        docker network connect <root_proxy_network_id> <container_id>
+            <root_proxy_network_id> se obtine cu docker network ls
+            <container_id> se obtine cu docker ps
+        restart container
+        
+?Update online deployment
+    on development machine 
+        docker build -f Dockerfile.prod -t alexrogna/jenkins3_web:prod --build-arg USER_ID=$(id -u) --build-arg GROUP_ID=$(id -g) .
+        docker push alexrogna/jenkins3_web:prod
+    on the server
+        docker-compose -f docker-compose-jenkins3.yml stop
+        docker-compose -f docker-compose-jenkins3.yml pull
+        docker-compose -f docker-compose-jenkins3.yml up
+        docker network connect <root_proxy_network_id> <container_id>
+            <root_proxy_network_id> se obtine cu docker network ls
+            <container_id> se obtine cu docker ps
+        restart container
+
+?add redis
+    in docker-compose.yml
+        redis_jenkins3:
+            image: redis
+    in docker-compose-jenkins3.yml
+        redis_jenkins3:
+            image: redis
+            restart: always
+    in Gemfile uncomment redis and run bundle install
+    in cable.yml or wherever is the path for redis server change to redis_jenkins3:6379
+    and also in production you need to connect the redis container to network

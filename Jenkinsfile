@@ -8,15 +8,15 @@ pipeline {
     stages {
         stage('Webpacker Install') {
             steps {
-                sh '/usr/local/bin/docker-compose run --rm web_jenkins3 jenkins3/bin/rails webpacker:install'
+                sh '/usr/local/bin/docker-compose run --rm web_jenkins3 bin/rails webpacker:install'
             }
         }
         stage('Build') {
             steps {
                 sh '/usr/local/bin/docker-compose stop'
                 sh '/usr/local/bin/docker-compose up -d'
-                sh '/usr/local/bin/docker-compose exec -T --user "$(id -u):$(id -g)" jenkins3/web_jenkins3 bin/rails db:create'
-                sh '/usr/local/bin/docker-compose exec -T --user "$(id -u):$(id -g)" jenkins3/web_jenkins3 bin/rails db:migrate'
+                sh '/usr/local/bin/docker-compose exec -T --user "$(id -u):$(id -g)" web_jenkins3 bin/rails db:create'
+                sh '/usr/local/bin/docker-compose exec -T --user "$(id -u):$(id -g)" web_jenkins3 bin/rails db:migrate'
                 timeout(120) {
                     waitUntil {
                         script {

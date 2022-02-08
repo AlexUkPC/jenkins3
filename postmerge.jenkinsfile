@@ -54,8 +54,8 @@ pipeline {
                     echo \${DOCKER_PSW} > docker-password
                     export HOME=${WORKSPACE}
                     cat docker-password | docker login --username \${DOCKER_USR} --password-stdin
-                    docker push alexrogna/jenkins3:prod
-                    docker push alexrogna/jenkins3:${version_g}
+                    docker push alexrogna/jenkins3_web:prod
+                    docker push alexrogna/jenkins3_web:${version_g}
                 """
             }
         }

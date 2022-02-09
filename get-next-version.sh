@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 next_version=$(git tag -l | egrep '^[0-9]+\.[0-9]+\.[0-9]+$' | 
-sort --version-sort | tail -1 | awk -F . '{print $1 "." ( $3==2 ? $2+1 : $2) "." ( $3==2 ? 0 : $3+1 )}}')
+sort --version-sort | tail -1 | awk -F . '{print $1 "." ( $3==2 ? $2+1 : $2) "." ( $3==2 ? 0 : $3+1 )}')
 if [ -z "${next_version}" ]; then
     next_version='0.1.0'
 fi

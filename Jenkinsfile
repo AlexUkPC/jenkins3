@@ -6,6 +6,11 @@ pipeline {
         string(name: 'REF', defaultValue: '\${ghprbActualCommit}', description: 'Commit to build')
     }
     stages {
+        stage('Bundle Install') {
+            steps {
+                sh '/usr/local/bin/docker-compose run --rm web_jenkins3 bundle install'
+            }
+        }
         stage('Webpacker Install') {
             steps {
                 sh '/usr/local/bin/docker-compose run --rm web_jenkins3 bin/rails webpacker:install'
@@ -18,7 +23,7 @@ pipeline {
         }
         stage('Start server') {
             steps {
-                sh '/usr/local/bin/docker-compose up -d --build'
+                sh '/usr/local/bin/docker-compose up -d --remove-orphans'
             }
         }
         stage('Create database') {

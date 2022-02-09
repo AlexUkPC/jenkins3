@@ -8,7 +8,7 @@ pipeline {
     stages {
         stage('Bundle Install') {
             steps {
-                sh '/usr/local/bin/docker-compose run --rm web_jenkins3 bin/rails bundle install'
+                sh '/usr/local/bin/docker-compose run --rm web_jenkins3 bundle install'
             }
         }
         stage('Webpacker Install') {

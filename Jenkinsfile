@@ -18,7 +18,7 @@ pipeline {
         }
         stage('Start server') {
             steps {
-                sh '/usr/local/bin/docker-compose up -d'
+                sh '/usr/local/bin/docker-compose up -d --build'
             }
         }
         stage('Create database') {

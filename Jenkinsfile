@@ -11,13 +11,29 @@ pipeline {
                 sh '/usr/local/bin/docker-compose run --rm web_jenkins3 bin/rails webpacker:install'
             }
         }
-        stage('Build') {
+        stage('Stop old containers') {
             steps {
                 sh '/usr/local/bin/docker-compose stop'
+            }
+        }
+        stage('Start server') {
+            steps {
                 sh '/usr/local/bin/docker-compose up -d'
+            }
+        }
+        stage('Create database') {
+            steps {
                 sh '/usr/local/bin/docker-compose exec -T --user "$(id -u):$(id -g)" web_jenkins3 bin/rails db:create'
+            }
+        }
+        stage('Migrate database') {
+            steps {
                 sh '/usr/local/bin/docker-compose exec -T --user "$(id -u):$(id -g)" web_jenkins3 bin/rails db:migrate'
-                timeout(120) {
+            }
+        }
+        stage('Wait for server to start') {
+            steps {
+                timeout(10) {
                     waitUntil {
                         script {
                             try {

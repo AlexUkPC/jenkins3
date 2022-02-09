@@ -6,6 +6,11 @@ pipeline {
         string(name: 'REF', defaultValue: '\${ghprbActualCommit}', description: 'Commit to build')
     }
     stages {
+        stage('Bundle Install') {
+            steps {
+                sh '/usr/local/bin/docker-compose run --rm web_jenkins3 bin/rails bundle install'
+            }
+        }
         stage('Webpacker Install') {
             steps {
                 sh '/usr/local/bin/docker-compose run --rm web_jenkins3 bin/rails webpacker:install'

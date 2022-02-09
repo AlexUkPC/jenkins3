@@ -23,7 +23,7 @@ pipeline {
         }
         stage('Start server') {
             steps {
-                sh '/usr/local/bin/docker-compose up -d --build'
+                sh '/usr/local/bin/docker-compose up -d --remove-orphans'
             }
         }
         stage('Create database') {

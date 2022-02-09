@@ -32,7 +32,7 @@ pipeline {
                 }
             }
         }
-        stage('test') {
+        stage('Unit test') {
             steps {
                 sh '/usr/local/bin/docker-compose exec -T --user "$(id -u):$(id -g)" web_jenkins3 bin/rails test:models'
             }   
